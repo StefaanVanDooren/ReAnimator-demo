@@ -20,10 +20,10 @@
   this software.
 */
 
-#include "ReAnimator.h"
+#include "NewRGBWifiLamp.h"
 
 
-ReAnimator::ReAnimator(CRGB leds_in[NUM_LEDS], uint8_t *hue_type, uint16_t led_strip_milliamps) : freezer(*this) {
+WifiLamp::WifiLamp(CRGB leds_in[NUM_LEDS], uint8_t *hue_type, uint16_t led_strip_milliamps) : freezer(*this) {
     leds = leds_in;
 
     selected_hue = hue_type;
@@ -36,11 +36,11 @@ ReAnimator::ReAnimator(CRGB leds_in[NUM_LEDS], uint8_t *hue_type, uint16_t led_s
     persistent_overlay = NO_OVERLAY;
 
 #if !defined(LEFT_TO_RIGHT_IS_FORWARD) || LEFT_TO_RIGHT_IS_FORWARD
-    direction_fp = &ReAnimator::forwards;
-    antidirection_fp = &ReAnimator::backwards;
+    direction_fp = &WifiLamp::forwards;
+    antidirection_fp = &WifiLamp::backwards;
 #else
-    direction_fp = &ReAnimator::backwards;
-    antidirection_fp = &ReAnimator::forwards;
+    direction_fp = &WifiLamp::backwards;
+    antidirection_fp = &WifiLamp::forwards;
 #endif
 
     reverse = false;
@@ -63,7 +63,7 @@ ReAnimator::ReAnimator(CRGB leds_in[NUM_LEDS], uint8_t *hue_type, uint16_t led_s
 }
 
 
-ReAnimator::Freezer::Freezer(ReAnimator &r) : parent(r) {
+WifiLamp::Freezer::Freezer(WifiLamp &r) : parent(r) {
     m_frozen = false;
     m_frozen_previous_millis = 0;
 }
@@ -75,7 +75,7 @@ ReAnimator::Freezer::Freezer(ReAnimator &r) : parent(r) {
 // homogenize_brightness() learns the lowest brightness level of all the animations and uses it across every animation to keep a consistent
 // brightness level. This will lead to dimmer animations and power usage almost always a good bit lower than what the FastLED power
 // management function was set to aim for. Set the #define for HOMOGENIZE_BRIGHTNESS to false to disable this feature.
-void ReAnimator::homogenize_brightness() {
+void WifiLamp::homogenize_brightness() {
     uint8_t max_brightness = calculate_max_brightness_for_power_vmA(leds, NUM_LEDS, homogenized_brightness, LED_STRIP_VOLTAGE, selected_led_strip_milliamps);
     if (max_brightness < homogenized_brightness) {
         homogenized_brightness = max_brightness;
@@ -83,12 +83,12 @@ void ReAnimator::homogenize_brightness() {
 }
 
 
-void ReAnimator::set_selected_hue(uint8_t *hue_type) {
+void WifiLamp::set_selected_hue(uint8_t *hue_type) {
     selected_hue = hue_type;
 }
 
 
-void ReAnimator::set_selected_led_strip_milliamps(uint16_t led_strip_milliamps) {
+void WifiLamp::set_selected_led_strip_milliamps(uint16_t led_strip_milliamps) {
     if (led_strip_milliamps > selected_led_strip_milliamps) {
         // normally homogenized_brightness only goes down but since the power is increased we need to reset homogenized_brightness so it
         // learn the new brightness level that makes all the animations have a consistent brightness
@@ -101,22 +101,22 @@ void ReAnimator::set_selected_led_strip_milliamps(uint16_t led_strip_milliamps) 
 }
 
 
-Pattern ReAnimator::get_pattern() {
+Pattern WifiLamp::get_pattern() {
     return pattern;
 }
 
 
-int8_t ReAnimator::set_pattern(Pattern pattern_in) {
+int8_t WifiLamp::set_pattern(Pattern pattern_in) {
     return set_pattern(pattern_in, false, true);
 }
 
 
-int8_t ReAnimator::set_pattern(Pattern pattern_in, bool reverse) {
+int8_t WifiLamp::set_pattern(Pattern pattern_in, bool reverse) {
     return set_pattern(pattern_in, reverse, true);
 }
 
 
-int8_t ReAnimator::set_pattern(Pattern pattern_in, bool reverse_in, bool disable_autocycle_flipflop) {
+int8_t WifiLamp::set_pattern(Pattern pattern_in, bool reverse_in, bool disable_autocycle_flipflop) {
     Pattern pattern_out = NULL;
     Overlay overlay_out = NULL;
     int8_t retval = 0;
@@ -230,17 +230,17 @@ int8_t ReAnimator::set_pattern(Pattern pattern_in, bool reverse_in, bool disable
 }
 
 
-int8_t ReAnimator::increment_pattern() {
+int8_t WifiLamp::increment_pattern() {
     return increment_pattern(true);
 }
 
 
-int8_t ReAnimator::increment_pattern(bool disable_autocycle_flipflop) {
+int8_t WifiLamp::increment_pattern(bool disable_autocycle_flipflop) {
     return set_pattern(pattern+1, reverse, disable_autocycle_flipflop);
 }
 
 
-Overlay ReAnimator::get_overlay(bool is_persistent) {
+Overlay WifiLamp::get_overlay(bool is_persistent) {
     if (is_persistent) {
         return persistent_overlay;
     }
@@ -250,7 +250,7 @@ Overlay ReAnimator::get_overlay(bool is_persistent) {
 }
 
 
-int8_t ReAnimator::set_overlay(Overlay overlay_in, bool is_persistent) {
+int8_t WifiLamp::set_overlay(Overlay overlay_in, bool is_persistent) {
     Overlay overlay_out = NULL;
     int8_t retval = 0;
 
@@ -289,7 +289,7 @@ int8_t ReAnimator::set_overlay(Overlay overlay_in, bool is_persistent) {
 }
 
 
-void ReAnimator::increment_overlay(bool is_persistent) {
+void WifiLamp::increment_overlay(bool is_persistent) {
     if (is_persistent) {
         set_overlay(persistent_overlay+1, is_persistent);
     }
@@ -299,35 +299,35 @@ void ReAnimator::increment_overlay(bool is_persistent) {
 }
 
 
-void ReAnimator::set_sound_value_gain(uint8_t gain) {
+void WifiLamp::set_sound_value_gain(uint8_t gain) {
     sound_value_gain = gain;
 }
 
 
-uint32_t ReAnimator::get_autocycle_interval() {
+uint32_t WifiLamp::get_autocycle_interval() {
     return autocycle_interval;
 }
 
 
-void ReAnimator::set_autocycle_interval(uint32_t inteval) {
+void WifiLamp::set_autocycle_interval(uint32_t inteval) {
     autocycle_interval = inteval;
     autocycle_previous_millis = 0; // set to zero so autocycling will start without waiting
 }
 
 
-bool ReAnimator::get_autocycle_enabled() {
+bool WifiLamp::get_autocycle_enabled() {
     return autocycle_enabled;
 }
 
 
-void ReAnimator::set_autocycle_enabled(bool enabled) {
+void WifiLamp::set_autocycle_enabled(bool enabled) {
     autocycle_enabled = enabled;
     autocycle_previous_millis = 0; // set to zero so autocycling will start without waiting
 }
 
 
 // loop through all of the patterns
-void ReAnimator::autocycle() {
+void WifiLamp::autocycle() {
     if((millis() - autocycle_previous_millis) > autocycle_interval) {
         autocycle_previous_millis = millis();
         DEBUG_PRINTLN("autocycle started");
@@ -339,30 +339,30 @@ void ReAnimator::autocycle() {
 }
 
 
-uint32_t ReAnimator::get_flipflop_interval() {
+uint32_t WifiLamp::get_flipflop_interval() {
     return flipflop_interval;
 }
 
 
-void ReAnimator::set_flipflop_interval(uint32_t inteval) {
+void WifiLamp::set_flipflop_interval(uint32_t inteval) {
     flipflop_interval = inteval;
     flipflop_previous_millis = 0; // set to zero so flipfloping will start without waiting
 }
 
 
-bool ReAnimator::get_flipflop_enabled() {
+bool WifiLamp::get_flipflop_enabled() {
     return flipflop_enabled;
 }
 
 
-void ReAnimator::set_flipflop_enabled(bool enabled) {
+void WifiLamp::set_flipflop_enabled(bool enabled) {
     flipflop_enabled = enabled;
     flipflop_previous_millis = 0; // set to zero so flipfloping will start without waiting
 }
 
 
 // alternate between running a pattern forwards or backwards
-void ReAnimator::flipflop() {
+void WifiLamp::flipflop() {
     if((millis() - flipflop_previous_millis) > flipflop_interval) {
         flipflop_previous_millis = millis();
         DEBUG_PRINTLN("flip flop loop started");
@@ -371,7 +371,7 @@ void ReAnimator::flipflop() {
 }
 
 
-void ReAnimator::reanimate() {
+void WifiLamp::reanimate() {
     if (autocycle_enabled) {
         autocycle();
     }
@@ -402,10 +402,10 @@ void ReAnimator::reanimate() {
 }
 
 
-int8_t ReAnimator::run_pattern(Pattern pattern) {
+int8_t WifiLamp::run_pattern(Pattern pattern) {
     int8_t retval = 0;
     uint8_t orbit_delta = !reverse ? 1 : -1;
-    uint16_t(ReAnimator::*dfp)(uint16_t) = !reverse ? direction_fp : antidirection_fp;
+    uint16_t(WifiLamp::*dfp)(uint16_t) = !reverse ? direction_fp : antidirection_fp;
 
     switch(pattern) {
         default:
@@ -416,11 +416,11 @@ int8_t ReAnimator::run_pattern(Pattern pattern) {
             break;
         case THEATER_CHASE:
             //theater_chase(350, dfp);
-            accelerate_decelerate_pattern(200, 10, 1000, &ReAnimator::theater_chase, dfp);
+            accelerate_decelerate_pattern(200, 10, 1000, &WifiLamp::theater_chase, dfp);
             break;
         case RUNNING_LIGHTS:
             //running_lights(30, dfp);
-            accelerate_decelerate_pattern(30, 2, 1000, &ReAnimator::running_lights, dfp);
+            accelerate_decelerate_pattern(30, 2, 1000, &WifiLamp::running_lights, dfp);
             break;
         case SHOOTING_STAR:
             shooting_star(5, 5, 40, 50, dfp);
@@ -477,7 +477,7 @@ int8_t ReAnimator::run_pattern(Pattern pattern) {
             sound_orbit(30, dfp);
             break;
         case DYNAMIC_RAINBOW:
-            //accelerate_decelerate_pattern(30, 2, 1000, &ReAnimator::dynamic_rainbow, dfp);
+            //accelerate_decelerate_pattern(30, 2, 1000, &WifiLamp::dynamic_rainbow, dfp);
             dynamic_rainbow(50, dfp);
             break;
     }
@@ -486,7 +486,7 @@ int8_t ReAnimator::run_pattern(Pattern pattern) {
 }
 
 
-void ReAnimator::apply_overlay(Overlay overlay) {
+void WifiLamp::apply_overlay(Overlay overlay) {
     int8_t retval = 0;
 
     switch(overlay) {
@@ -523,7 +523,7 @@ void ReAnimator::apply_overlay(Overlay overlay) {
 // ++++++++++ PATTERNS ++++++++++
 // ++++++++++++++++++++++++++++++
 
-void ReAnimator::orbit(uint16_t draw_interval, int8_t delta) {
+void WifiLamp::orbit(uint16_t draw_interval, int8_t delta) {
     static uint16_t pos = NUM_LEDS;
     static uint8_t loop_num = 0;
 
@@ -547,12 +547,12 @@ void ReAnimator::orbit(uint16_t draw_interval, int8_t delta) {
         leds[pos] = CHSV(*selected_hue, 255, 255);
         pos = pos + delta;
 
-        loop_num = (pos == NUM_LEDS) ? loop_num+1 : loop_num; 
+        loop_num = (pos == NUM_LEDS) ? loop_num+1 : loop_num;
     }
 }
 
 
-void ReAnimator::theater_chase(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::theater_chase(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     static uint16_t delta = 0;
 
     if (is_wait_over(draw_interval)) {
@@ -567,7 +567,7 @@ void ReAnimator::theater_chase(uint16_t draw_interval, uint16_t(ReAnimator::*dfp
 }
 
 
-void ReAnimator::running_lights(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::running_lights(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     const uint8_t num_waves = 3; // results in three full sine waves across LED strip
     static uint16_t delta = 0;
 
@@ -587,7 +587,7 @@ void ReAnimator::running_lights(uint16_t draw_interval, uint16_t(ReAnimator::*df
 //star_size – the number of LEDs that represent the star, not counting the tail of the star.
 //star_trail_decay - how fast the star trail decays. A larger number makes the tail short and/or disappear faster.
 //spm - stars per minute
-void ReAnimator::shooting_star(uint16_t draw_interval, uint8_t star_size, uint8_t star_trail_decay, uint8_t spm, uint16_t(ReAnimator::*dfp)(uint16_t)) {  
+void WifiLamp::shooting_star(uint16_t draw_interval, uint8_t star_size, uint8_t star_trail_decay, uint8_t spm, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     static uint16_t start_pos = random16(0, NUM_LEDS/4);
     static uint16_t stop_pos = random16(star_size+(NUM_LEDS/2), NUM_LEDS);
 
@@ -625,7 +625,7 @@ void ReAnimator::shooting_star(uint16_t draw_interval, uint8_t star_size, uint8_
 }
 
 
-void ReAnimator::cylon(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::cylon(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     static uint16_t pos = 0;
     static int8_t delta = 1;
 
@@ -647,7 +647,7 @@ void ReAnimator::cylon(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16
 }
 
 
-void ReAnimator::solid(uint16_t draw_interval) {
+void WifiLamp::solid(uint16_t draw_interval) {
     if (is_wait_over(draw_interval)) {
         fill_solid(leds, NUM_LEDS, CHSV(*selected_hue, 255, 255));
     }
@@ -655,7 +655,7 @@ void ReAnimator::solid(uint16_t draw_interval) {
 
 
 // borrowed from FastLED/examples/DemoReel00.ino -Mark Kriegsman, December 2014
-void ReAnimator::juggle() {
+void WifiLamp::juggle() {
     // eight colored dots, weaving in and out of sync with each other
     fadeToBlackBy(leds, NUM_LEDS, 20);
     byte dothue = 0;
@@ -666,7 +666,7 @@ void ReAnimator::juggle() {
 }
 
 
-void ReAnimator::mitosis(uint16_t draw_interval, uint8_t cell_size) {
+void WifiLamp::mitosis(uint16_t draw_interval, uint8_t cell_size) {
     const uint16_t start_pos = NUM_LEDS/2;
     static uint16_t pos = start_pos;
 
@@ -691,7 +691,7 @@ void ReAnimator::mitosis(uint16_t draw_interval, uint8_t cell_size) {
 }
 
 
-void ReAnimator::bubbles(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::bubbles(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     const uint8_t num_bubbles = 8;
     static uint8_t bubble_time[num_bubbles] = {};
 
@@ -732,13 +732,13 @@ void ReAnimator::bubbles(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint
                 else {
                     bubble_time[i] = 0;
                 }
-            }        
+            }
         }
     }
 }
 
 
-void ReAnimator::sparkle(uint16_t draw_interval, bool random_color, uint8_t fade) {
+void WifiLamp::sparkle(uint16_t draw_interval, bool random_color, uint8_t fade) {
     uint8_t hue = (random_color) ? random8() : *selected_hue;
 
     // it's necessary to use finished_waiting() here instead of is_wait_over()
@@ -752,7 +752,7 @@ void ReAnimator::sparkle(uint16_t draw_interval, bool random_color, uint8_t fade
 
 
 // resembles the green code from The Matrix
-void ReAnimator::matrix(uint16_t draw_interval) {
+void WifiLamp::matrix(uint16_t draw_interval) {
     if (is_wait_over(draw_interval)) {
         memmove(&leds[1], &leds[0], (NUM_LEDS-1)*sizeof(CRGB));
 
@@ -766,7 +766,7 @@ void ReAnimator::matrix(uint16_t draw_interval) {
 }
 
 
-void ReAnimator::weave(uint16_t draw_interval) {
+void WifiLamp::weave(uint16_t draw_interval) {
     static uint16_t pos = 0;
 
     if (pattern != last_pattern_ran) {
@@ -784,7 +784,7 @@ void ReAnimator::weave(uint16_t draw_interval) {
 }
 
 
-void ReAnimator::starship_race(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::starship_race(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     const uint16_t race_distance = (11*UINT8_MAX)/2; // 7/2 -> 3.5 laps
     const uint8_t total_starships = 5;
     // UINT8_MAX/NUM_LEDS is the speed required for a starship to move one LED per redraw
@@ -865,7 +865,7 @@ void ReAnimator::starship_race(uint16_t draw_interval, uint16_t(ReAnimator::*dfp
 }
 
 
-void ReAnimator::pac_man(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::pac_man(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     static uint16_t pac_man_pos = 0;
     static int8_t pac_man_delta = 1;
 
@@ -904,7 +904,7 @@ void ReAnimator::pac_man(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint
 
             // the power pellet must be at least 16 leds forward of led[0]
             // from 18 to (3/4)*NUM_LEDS, multiply makes it even so that it falls on a pac_dot led
-            power_pellet_pos = 2*random16(9, (3*NUM_LEDS)/8 + 1); 
+            power_pellet_pos = 2*random16(9, (3*NUM_LEDS)/8 + 1);
 
             for (uint8_t i = 0; i < NUM_LEDS; i+=2) {
                 pac_dots[i] = 1;
@@ -987,7 +987,7 @@ void ReAnimator::pac_man(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint
 // -1*t^2 + 510*t - 1260 = 0
 // minimum ball_time_delta = (-510 + sqrt(510^2 - 4*(-1*-1260))/(2*-1) = 2.48
 // increasing ball_time_delta lets you increase the draw_interval therefore decreasing the frequency of redraws
-void ReAnimator::bouncing_balls(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::bouncing_balls(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     const uint16_t vi_max = 510; // initial velocity, 512 will make h exceed UINT16_MAX
     const uint8_t blur_length = 3;
     const uint8_t num_balls = 5;
@@ -1027,7 +1027,7 @@ void ReAnimator::bouncing_balls(uint16_t draw_interval, uint16_t(ReAnimator::*df
 }
 
 
-void ReAnimator::halloween_colors_fade(uint16_t draw_interval) {
+void WifiLamp::halloween_colors_fade(uint16_t draw_interval) {
     CRGBPalette16 halloween_colors;
     halloween_colors = CRGBPalette16(CHSV(HUE_ORANGE, 255, 255),
                                    CHSV(HUE_PURPLE, 255, 255),
@@ -1046,7 +1046,7 @@ void ReAnimator::halloween_colors_fade(uint16_t draw_interval) {
 }
 
 
-void ReAnimator::halloween_colors_orbit(uint16_t draw_interval, int8_t delta) {
+void WifiLamp::halloween_colors_orbit(uint16_t draw_interval, int8_t delta) {
     const uint8_t num_hues = 6;
     static uint8_t hi = 0;
     uint8_t hues[num_hues] = {HUE_ORANGE, HUE_PURPLE, HUE_ORANGE, HUE_RED, HUE_ORANGE, HUE_ALIEN_GREEN};
@@ -1077,19 +1077,19 @@ void ReAnimator::halloween_colors_orbit(uint16_t draw_interval, int8_t delta) {
 }
 
 
-void ReAnimator::sound_ribbons(uint16_t draw_interval) {
+void WifiLamp::sound_ribbons(uint16_t draw_interval) {
     if (is_wait_over(draw_interval)) {
         fadeToBlackBy(leds, NUM_LEDS, 20);
 
         leds[NUM_LEDS/2] = CHSV(*selected_hue, 255, sound_value);
         leds[(NUM_LEDS/2)-1] = CHSV(*selected_hue, 255, sound_value);
         fission();
-    }                                                                                
+    }
 }
 
 
 // derived from this code https://gist.github.com/suhajdab/9716635
-void ReAnimator::sound_ripple(uint16_t draw_interval, bool trigger) {
+void WifiLamp::sound_ripple(uint16_t draw_interval, bool trigger) {
     static bool enabled = true;
     const uint16_t max_delta = 16;
     static uint16_t delta = 0;
@@ -1130,7 +1130,7 @@ void ReAnimator::sound_ripple(uint16_t draw_interval, bool trigger) {
 }
 
 
-void ReAnimator::sound_orbit(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::sound_orbit(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     if (is_wait_over(draw_interval)) {
         for(uint16_t i = NUM_LEDS-1; i > 0; i--) {
             leds[(this->*dfp)(i)] = leds[(this->*dfp)(i-1)];
@@ -1141,7 +1141,7 @@ void ReAnimator::sound_orbit(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(
 }
 
 
-void ReAnimator::sound_blocks(uint16_t draw_interval, bool trigger) {
+void WifiLamp::sound_blocks(uint16_t draw_interval, bool trigger) {
     uint8_t hue = random8();
 
     static bool enabled = true;
@@ -1166,7 +1166,7 @@ void ReAnimator::sound_blocks(uint16_t draw_interval, bool trigger) {
 }
 
 
-void ReAnimator::dynamic_rainbow(uint16_t draw_interval, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::dynamic_rainbow(uint16_t draw_interval, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     static uint16_t delta = 0;
 
     if (is_wait_over(draw_interval)) {
@@ -1185,7 +1185,7 @@ void ReAnimator::dynamic_rainbow(uint16_t draw_interval, uint16_t(ReAnimator::*d
 // ++++++++++ OVERLAYS ++++++++++
 // ++++++++++++++++++++++++++++++
 
-void ReAnimator::breathing(uint16_t interval) {
+void WifiLamp::breathing(uint16_t interval) {
     const uint8_t min_brightness = 2;
     static uint8_t delta = 0; // goes up to 255 then overflows back to 0
 
@@ -1203,7 +1203,7 @@ void ReAnimator::breathing(uint16_t interval) {
 }
 
 
-void ReAnimator::flicker(uint16_t interval) {
+void WifiLamp::flicker(uint16_t interval) {
     fade_randomly(10, 150);
 
     // an on or off period less than 16 ms probably can't be perceived
@@ -1213,14 +1213,14 @@ void ReAnimator::flicker(uint16_t interval) {
 }
 
 
-void ReAnimator::glitter(uint16_t chance_of_glitter) {
+void WifiLamp::glitter(uint16_t chance_of_glitter) {
     if (chance_of_glitter > random16()) {
         leds[random16(NUM_LEDS)] += CRGB::White;
     }
 }
 
 
-void ReAnimator::fade_randomly(uint8_t chance_of_fade, uint8_t decay) {
+void WifiLamp::fade_randomly(uint8_t chance_of_fade, uint8_t decay) {
     for (uint16_t i = 0; i < NUM_LEDS; i++) {
         if (chance_of_fade > random8()) {
             leds[i].fadeToBlackBy(decay);
@@ -1233,12 +1233,12 @@ void ReAnimator::fade_randomly(uint8_t chance_of_fade, uint8_t decay) {
 // ++++++++++ HELPERS +++++++++++
 // ++++++++++++++++++++++++++++++
 
-uint16_t ReAnimator::forwards(uint16_t index) {
+uint16_t WifiLamp::forwards(uint16_t index) {
     return index;
 }
 
 
-uint16_t ReAnimator::backwards(uint16_t index) {
+uint16_t WifiLamp::backwards(uint16_t index) {
     return (NUM_LEDS-1)-index;
 }
 
@@ -1249,8 +1249,8 @@ uint16_t ReAnimator::backwards(uint16_t index) {
 // elapsed, therefore a second function that does the same thing as
 // is_wait_over() has been added. This is only a concern when a pattern
 // function and an overlay function are both called at the same time.
-// Patterns should use is_wait_over() and overlays should use finished_waiting(). 
-bool ReAnimator::is_wait_over(uint16_t interval) {
+// Patterns should use is_wait_over() and overlays should use finished_waiting().
+bool WifiLamp::is_wait_over(uint16_t interval) {
     static uint32_t pm = 0; // previous millis
     if ( (millis() - pm) > interval ) {
         pm = millis();
@@ -1262,7 +1262,7 @@ bool ReAnimator::is_wait_over(uint16_t interval) {
 }
 
 
-bool ReAnimator::finished_waiting(uint16_t interval) {
+bool WifiLamp::finished_waiting(uint16_t interval) {
     static uint32_t pm = 0; // previous millis
     if ( (millis() - pm) > interval ) {
         pm = millis();
@@ -1274,7 +1274,7 @@ bool ReAnimator::finished_waiting(uint16_t interval) {
 }
 
 
-void ReAnimator::accelerate_decelerate_pattern(uint16_t draw_interval_initial, uint16_t delta_initial, uint16_t update_period, void(ReAnimator::*pfp)(uint16_t, uint16_t(ReAnimator::*dfp)(uint16_t)), uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::accelerate_decelerate_pattern(uint16_t draw_interval_initial, uint16_t delta_initial, uint16_t update_period, void(WifiLamp::*pfp)(uint16_t, uint16_t(WifiLamp::*dfp)(uint16_t)), uint16_t(WifiLamp::*dfp)(uint16_t)) {
     static uint16_t draw_interval = draw_interval_initial;
     static int8_t delta = delta_initial;
 
@@ -1295,7 +1295,7 @@ void ReAnimator::accelerate_decelerate_pattern(uint16_t draw_interval_initial, u
 
 
 // derived from this code https://github.com/atuline/FastLED-Demos/blob/master/soundmems_demo/soundmems.h
-void ReAnimator::process_sound() {
+void WifiLamp::process_sound() {
     const uint16_t DC_OFFSET = 513;  // measured
     const uint8_t NUM_SAMPLES = 64;
 
@@ -1325,12 +1325,12 @@ void ReAnimator::process_sound() {
     if (sample > (sample_average + sample_threshold) && (sample < previous_sample)) {
         sample_peak = 1;
     }
-  
+
     previous_sample = sample;
 }
 
 
-void ReAnimator::motion_blur(int8_t blur_num, uint16_t pos, uint16_t(ReAnimator::*dfp)(uint16_t)) {
+void WifiLamp::motion_blur(int8_t blur_num, uint16_t pos, uint16_t(WifiLamp::*dfp)(uint16_t)) {
     if (blur_num > 0) {
         for (uint8_t i = 1; i < blur_num+1; i++) {
             if (pos >= pos-i) {
@@ -1350,7 +1350,7 @@ void ReAnimator::motion_blur(int8_t blur_num, uint16_t pos, uint16_t(ReAnimator:
 }
 
 
-void ReAnimator::fission() {
+void WifiLamp::fission() {
     for (uint16_t i = NUM_LEDS-1; i > NUM_LEDS/2; i--) {
         leds[i] = leds[i-1];
     }
@@ -1362,7 +1362,7 @@ void ReAnimator::fission() {
 
 
 // freeze_interval must be greater than m_failsafe_timeout
-void ReAnimator::Freezer::timer(uint16_t freeze_interval) {
+void WifiLamp::Freezer::timer(uint16_t freeze_interval) {
     static uint32_t pm = millis() - freeze_interval; // previous millis
 
     if ((millis() - pm) > freeze_interval) {
@@ -1373,7 +1373,7 @@ void ReAnimator::Freezer::timer(uint16_t freeze_interval) {
 }
 
 
-bool ReAnimator::Freezer::is_frozen() {
+bool WifiLamp::Freezer::is_frozen() {
     static bool all_black = false;
     static uint16_t frozen_duration = m_failsafe_timeout;
 
@@ -1401,7 +1401,7 @@ bool ReAnimator::Freezer::is_frozen() {
 }
 
 
-static int ReAnimator::compare(const void *a, const void *b) {
+static int WifiLamp::compare(const void *a, const void *b) {
   Starship *StarshipA = (Starship *)a;
   Starship *StarshipB = (Starship *)b;
 
@@ -1410,7 +1410,7 @@ static int ReAnimator::compare(const void *a, const void *b) {
 
 
 /*
-void ReAnimator::print_dt() {
+void WifiLamp::print_dt() {
     static uint32_t pm = 0; // previous millis
     Serial.print("dt: ");
     Serial.println(millis() - pm);

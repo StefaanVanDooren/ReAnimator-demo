@@ -20,11 +20,9 @@
   this software.
 */
 
-#include "ReAnimator_demo.h"
-#include "ReAnimator.h"
+#include "NewRGBWifiLamp.h"
 
-#define LEDS_DATA_PIN 2
-#define LED_STRIP_MILLIAMPS 100
+
 
 CRGB leds[NUM_LEDS];
 
@@ -110,9 +108,3 @@ void loop() {
     GlowSerum.reanimate();
     FastLED.show(); // only want to use one controller so management of brightness and power usage is more easy
 }
-
-
-
-
-
-
